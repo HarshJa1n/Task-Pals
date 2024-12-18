@@ -6,6 +6,8 @@ export interface Task {
   completed: boolean;
   completedBy?: 'user1' | 'user2';
   completedAt?: string;
+  startTime: string | null;
+  timeSpent: number;
 }
 
 export interface User {

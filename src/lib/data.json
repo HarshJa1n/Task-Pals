@@ -1,46 +1,104 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "title": "Complete Project Proposal",
-      "description": "Write and submit the project proposal document",
+      "title": "Create Sequence Diagrams for Fault Tolerance and Communication Modes",
+      "description": "Develop the required sequence diagrams to visualize fault tolerance mechanisms and clarify communication modes and timings.",
       "assignedTo": "user1",
-      "completed": true,
-      "completedBy": "user1",
-      "completedAt": "2024-12-18T06:52:32.571Z"
+      "completed": false,
+      "id": "1734508100385hdsyi2qyk",
+      "startTime": null,
+      "timeSpent": 0
     },
     {
-      "id": "2",
-      "title": "Review Code Changes",
-      "description": "Review and approve pending pull requests",
+      "title": "Test Architectures and Conduct POC for Agent's Version Control",
+      "description": "Perform testing on the four developed architectures and conduct a proof of concept for the agent's version control capabilities.",
       "assignedTo": "user2",
-      "completed": false
+      "completed": false,
+      "id": "17345081003855q1to57yu",
+      "startTime": null,
+      "timeSpent": 0
     },
     {
-      "id": "3",
-      "title": "Update Documentation",
-      "description": "Update the API documentation with recent changes",
+      "title": "Establish Strategy for Prompt Injection Frequency",
+      "description": "Develop a clear strategy for determining how often prompts should be injected—per chat or session—to optimize performance.",
+      "assignedTo": "user2",
+      "completed": false,
+      "id": "1734508100385r7p5rnouf",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Implement System Prompt Formatting Changes",
+      "description": "Make necessary formatting changes in the design of system prompts, including the use of dynamic placeholders.",
+      "assignedTo": "user2",
+      "completed": false,
+      "id": "17345081003851z1309i1s",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Update Agent State Formats",
+      "description": "Modify agent state formats to ensure dynamic representation is compatible across different UIs and agent configurations.",
+      "assignedTo": "user2",
+      "completed": false,
+      "id": "1734508100385un5sc78b1",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Create Robust Prompt Creation System for Agents",
+      "description": "Develop a personalized prompt creator for each agent, ensuring it adapts based on available tools and configurations.",
       "assignedTo": "user1",
-      "completed": true,
-      "completedBy": "user1",
-      "completedAt": "2024-12-18T06:52:36.168Z"
+      "completed": false,
+      "id": "17345081003851jpmlwal1",
+      "startTime": null,
+      "timeSpent": 0
     },
     {
-      "id": "4",
-      "title": "Test New Features",
-      "description": "Perform testing on newly implemented features",
+      "title": "Plan Next Steps for State Streaming and Continuous UI Enhancement",
+      "description": "Outline the next actions for improving state streaming functionality and user interface interaction based on co-pilot implementation.",
+      "assignedTo": "user1",
+      "completed": false,
+      "id": "173450810038578ickjlv1",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Schedule Follow-Up Meeting",
+      "description": "Organize a follow-up meeting to review progress on diagrams, tests, and alignment with expected outcomes.",
       "assignedTo": "user2",
-      "completed": false
+      "completed": false,
+      "id": "173450810038540zfk10qc",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Assign Team Members to Major Tasks",
+      "description": "Designate specific team members to oversee significant tasks, particularly those involving prompt creation and state streaming.",
+      "assignedTo": "user1",
+      "completed": false,
+      "id": "1734508100385kl0rbi8l7",
+      "startTime": null,
+      "timeSpent": 0
+    },
+    {
+      "title": "Set Timeline for Implementation and Testing",
+      "description": "Establish a timeline for the implementation and testing phases to ensure thorough coverage of all elements discussed.",
+      "assignedTo": "user2",
+      "completed": false,
+      "id": "17345081003855f6bfazeo",
+      "startTime": null,
+      "timeSpent": 0
     }
   ],
   "users": [
     {
       "id": "user1",
-      "name": "User One"
+      "name": "Harsh"
     },
     {
       "id": "user2",
-      "name": "User Two"
+      "name": "Priyanshu"
     }
   ]
 }
