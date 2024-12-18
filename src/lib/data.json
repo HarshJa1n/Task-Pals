@@ -1,0 +1,46 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Complete Project Proposal",
+      "description": "Write and submit the project proposal document",
+      "assignedTo": "user1",
+      "completed": true,
+      "completedBy": "user1",
+      "completedAt": "2024-12-18T06:52:32.571Z"
+    },
+    {
+      "id": "2",
+      "title": "Review Code Changes",
+      "description": "Review and approve pending pull requests",
+      "assignedTo": "user2",
+      "completed": false
+    },
+    {
+      "id": "3",
+      "title": "Update Documentation",
+      "description": "Update the API documentation with recent changes",
+      "assignedTo": "user1",
+      "completed": true,
+      "completedBy": "user1",
+      "completedAt": "2024-12-18T06:52:36.168Z"
+    },
+    {
+      "id": "4",
+      "title": "Test New Features",
+      "description": "Perform testing on newly implemented features",
+      "assignedTo": "user2",
+      "completed": false
+    }
+  ],
+  "users": [
+    {
+      "id": "user1",
+      "name": "User One"
+    },
+    {
+      "id": "user2",
+      "name": "User Two"
+    }
+  ]
+}
