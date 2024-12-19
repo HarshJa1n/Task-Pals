@@ -19,11 +19,19 @@ export default function Home() {
     try {
       const response = await fetch('/api/tasks');
       const data = await response.json();
-      
+
+      // Sort tasks based on last added first and move completed tasks to the end
+      const sortedTasks = data.tasks.sort((a: Task, b: Task) => {
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        return new Date(b.id).getTime() - new Date(a.id).getTime();
+      });
+
       // Only update state if data has changed
-      if (JSON.stringify(data.tasks) !== JSON.stringify(tasks) ||
+      if (JSON.stringify(sortedTasks) !== JSON.stringify(tasks) ||
           JSON.stringify(data.users) !== JSON.stringify(users)) {
-        setTasks(data.tasks);
+        setTasks(sortedTasks);
         setUsers(data.users);
       }
     } catch (error) {
