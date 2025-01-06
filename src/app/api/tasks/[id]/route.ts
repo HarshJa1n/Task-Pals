@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateTaskStatus, deleteTask, updateTask, undoTaskCompletion, startTask, pauseTask } from '@/lib/data';
 
+type Params = Promise<{ id: string }>
+
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const taskId = context.params.id;
+    const params = await segmentData.params;
+    const taskId = params.id;
     const { userId, action, updates } = await request.json();
     
     if (!userId || (userId !== 'user1' && userId !== 'user2')) {
@@ -64,10 +67,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const taskId = context.params.id;
+    const params = await segmentData.params;
+    const taskId = params.id;
     const { userId } = await request.json();
     
     if (!userId || (userId !== 'user1' && userId !== 'user2')) {

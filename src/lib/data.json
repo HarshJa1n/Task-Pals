@@ -10,8 +10,8 @@
       "timeSpent": 0
     },
     {
-      "title": "Test Architectures and Conduct POC for Agent's Version Control",
-      "description": "Perform testing on the four developed architectures and conduct a proof of concept for the agent's version control capabilities.",
+      "title": "Conduct POC for Agent's Version Control",
+      "description": "Conduct a proof of concept for the agent's version control capabilities.",
       "assignedTo": "user2",
       "completed": false,
       "id": "17345081003855q1to57yu",
@@ -58,10 +58,12 @@
       "title": "Plan Next Steps for State Streaming and Continuous UI Enhancement",
       "description": "Outline the next actions for improving state streaming functionality and user interface interaction based on co-pilot implementation.",
       "assignedTo": "user1",
-      "completed": false,
+      "completed": true,
       "id": "173450810038578ickjlv1",
       "startTime": null,
-      "timeSpent": 0
+      "timeSpent": 0,
+      "completedBy": "user1",
+      "completedAt": "2025-01-06T08:30:09.604Z"
     },
     {
       "title": "Schedule Follow-Up Meeting",
@@ -73,21 +75,12 @@
       "timeSpent": 0
     },
     {
-      "title": "Assign Team Members to Major Tasks",
-      "description": "Designate specific team members to oversee significant tasks, particularly those involving prompt creation and state streaming.",
+      "title": "Implementation and Testing",
+      "description": "Establish a timeline for the implementation and testing phases to ensure thorough coverage of all 4 Architectures",
       "assignedTo": "user1",
       "completed": false,
-      "id": "1734508100385kl0rbi8l7",
-      "startTime": null,
-      "timeSpent": 0
-    },
-    {
-      "title": "Set Timeline for Implementation and Testing",
-      "description": "Establish a timeline for the implementation and testing phases to ensure thorough coverage of all elements discussed.",
-      "assignedTo": "user2",
-      "completed": false,
       "id": "17345081003855f6bfazeo",
-      "startTime": null,
+      "startTime": "2024-12-18T08:20:45.230Z",
       "timeSpent": 0
     }
   ],
