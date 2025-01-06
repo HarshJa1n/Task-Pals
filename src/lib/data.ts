@@ -3,18 +3,25 @@ import { prisma } from './prisma';
 
 export async function getData(): Promise<{ tasks: Task[]; users: User[] }> {
   const [tasks, users] = await Promise.all([
-    prisma.task.findMany(),
+    prisma.task.findMany({
+      orderBy: [
+        { priority: 'desc' },
+        { completed: 'asc' },
+        { id: 'desc' }
+      ]
+    }),
     prisma.user.findMany(),
   ]);
   return { tasks, users };
 }
 
-export async function createTask(title: string, description: string, userId: 'user1' | 'user2'): Promise<Task> {
+export async function createTask(title: string, description: string, userId: 'user1' | 'user2', priority: number = 0): Promise<Task> {
   return prisma.task.create({
     data: {
       title,
       description,
       assignedTo: userId,
+      priority,
     },
   });
 }
@@ -72,7 +79,7 @@ export async function deleteTask(taskId: string, userId: 'user1' | 'user2'): Pro
 export async function updateTask(
   taskId: string,
   userId: 'user1' | 'user2',
-  updates: { title?: string; description?: string }
+  updates: { title?: string; description?: string; priority?: number }
 ): Promise<Task | null> {
   const task = await prisma.task.findFirst({
     where: { id: taskId, assignedTo: userId },
@@ -185,5 +192,12 @@ export async function transferTask(taskId: string, fromUserId: 'user1' | 'user2'
       assignedTo: toUserId,
       startTime: null, // Reset timer when transferring
     },
+  });
+}
+
+export async function updateTaskPriority(taskId: string, priority: number): Promise<Task | null> {
+  return prisma.task.update({
+    where: { id: taskId },
+    data: { priority },
   });
 } 

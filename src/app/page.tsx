@@ -15,6 +15,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -28,11 +29,19 @@ export default function Home() {
       const tasksArray = Array.isArray(data.tasks) ? data.tasks : [];
       const usersArray = Array.isArray(data.users) ? data.users : [];
 
-      // Sort tasks based on last added first and move completed tasks to the end
+      // Sort tasks based on priority (high to low) and completion status
       const sortedTasks = [...tasksArray].sort((a: Task, b: Task) => {
+        // First, sort by completion status
         if (a.completed !== b.completed) {
           return a.completed ? 1 : -1;
         }
+        // Then by priority (if exists, otherwise treat as 0)
+        const priorityA = typeof a.priority === 'number' ? a.priority : 0;
+        const priorityB = typeof b.priority === 'number' ? b.priority : 0;
+        if (priorityA !== priorityB) {
+          return priorityB - priorityA;
+        }
+        // Finally by creation date
         return new Date(b.id).getTime() - new Date(a.id).getTime();
       });
 
@@ -50,6 +59,62 @@ export default function Home() {
       setLoading(false);
     }
   }, [tasks, users]);
+
+  const handleDragStart = (e: React.DragEvent, task: Task) => {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTask(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetTask: Task) => {
+    e.preventDefault();
+    if (!draggedTask || draggedTask.id === targetTask.id) return;
+
+    // Calculate new priority
+    const draggedIndex = tasks.findIndex(t => t.id === draggedTask.id);
+    const targetIndex = tasks.findIndex(t => t.id === targetTask.id);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newTasks = [...tasks];
+    const [removed] = newTasks.splice(draggedIndex, 1);
+    newTasks.splice(targetIndex, 0, removed);
+
+    // Update priorities based on position
+    const updatedTasks = newTasks.map((task, index) => ({
+      ...task,
+      priority: newTasks.length - index - 1
+    }));
+
+    setTasks(updatedTasks);
+
+    // Update priority in the database
+    try {
+      await fetch(`/api/tasks/${draggedTask.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser,
+          action: 'updatePriority',
+          updates: { priority: updatedTasks.find(t => t.id === draggedTask.id)?.priority || 0 }
+        }),
+      });
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+      // Revert to original order on error
+      await fetchData();
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -116,7 +181,7 @@ export default function Home() {
   const currentUserName = users.find(u => u.id === currentUser)?.name || 'Unknown User';
 
   return (
-    <>
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <span role="img" aria-label="TaskPals logo" className="text-4xl">
@@ -172,6 +237,10 @@ export default function Home() {
               users={users}
               currentUser={currentUser}
               onUpdate={fetchData}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             />
           ))}
         </div>
@@ -189,6 +258,10 @@ export default function Home() {
               users={users}
               currentUser={currentUser}
               onUpdate={fetchData}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             />
           ))}
         </div>
@@ -200,6 +273,6 @@ export default function Home() {
         users={users}
         onUpdate={fetchData}
       />
-    </>
+    </div>
   );
 } 
