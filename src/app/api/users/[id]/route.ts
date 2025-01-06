@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateUserName } from '@/lib/data';
 
+type Params = Promise<{ id: string }>
+
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const userId = context.params.id as 'user1' | 'user2';
+    const params = await segmentData.params;
+    const userId = params.id as 'user1' | 'user2';
     const { name } = await request.json();
     
     if (!name || typeof name !== 'string') {

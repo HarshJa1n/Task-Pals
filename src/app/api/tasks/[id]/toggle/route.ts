@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateTaskStatus, undoTaskCompletion } from '@/lib/data';
 
+type Params = Promise<{ id: string }>
+
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const taskId = context.params.id;
+    const params = await segmentData.params;
+    const taskId = params.id;
     const { userId } = await request.json();
     
     if (!userId || (userId !== 'user1' && userId !== 'user2')) {
