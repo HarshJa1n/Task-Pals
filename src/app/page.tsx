@@ -13,15 +13,23 @@ export default function Home() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<'user1' | 'user2'>('user1');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       const response = await fetch('/api/tasks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
       const data = await response.json();
 
+      // Ensure data.tasks is an array
+      const tasksArray = Array.isArray(data.tasks) ? data.tasks : [];
+      const usersArray = Array.isArray(data.users) ? data.users : [];
+
       // Sort tasks based on last added first and move completed tasks to the end
-      const sortedTasks = data.tasks.sort((a: Task, b: Task) => {
+      const sortedTasks = [...tasksArray].sort((a: Task, b: Task) => {
         if (a.completed !== b.completed) {
           return a.completed ? 1 : -1;
         }
@@ -30,12 +38,14 @@ export default function Home() {
 
       // Only update state if data has changed
       if (JSON.stringify(sortedTasks) !== JSON.stringify(tasks) ||
-          JSON.stringify(data.users) !== JSON.stringify(users)) {
+          JSON.stringify(usersArray) !== JSON.stringify(users)) {
         setTasks(sortedTasks);
-        setUsers(data.users);
+        setUsers(usersArray);
       }
+      setError(null);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('Failed to load tasks. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -87,6 +97,14 @@ export default function Home() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-xl text-gray-600">Loading tasks...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-xl text-red-500">{error}</div>
       </div>
     );
   }
