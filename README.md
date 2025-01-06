@@ -18,7 +18,7 @@ A competitive task management application built with Next.js where two users can
 
 - **Frontend**: Next.js with TypeScript
 - **Styling**: Tailwind CSS
-- **Data Storage**: Local JSON file (can be easily extended to use a database)
+- **Database**: PostgreSQL with Prisma ORM
 - **API**: Next.js API Routes
 
 ## Getting Started
@@ -34,12 +34,23 @@ A competitive task management application built with Next.js where two users can
    npm install
    ```
 
-3. Run the development server:
+3. Set up the database:
+   - Create a `.env` file in the root directory
+   - Add your PostgreSQL connection URL:
+     ```
+     DATABASE_URL=your_postgres_connection_url
+     ```
+   - Run database migrations:
+     ```bash
+     npx prisma migrate dev
+     ```
+
+4. Run the development server:
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Usage
 
@@ -70,12 +81,14 @@ A competitive task management application built with Next.js where two users can
 - `/src/components`: React components
 - `/src/lib`: Data management utilities
 - `/src/types`: TypeScript type definitions
+- `/prisma`: Database schema and migrations
 
 ## API Endpoints
 
 - `GET /api/tasks`: Get all tasks
 - `POST /api/tasks`: Create a new task
 - `PATCH /api/tasks/[id]`: Update task status
+- `DELETE /api/tasks/[id]`: Delete a task
 
 ## Contributing
 
