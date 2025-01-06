@@ -8,12 +8,26 @@ interface TaskCardProps {
   currentUser: 'user1' | 'user2';
   users?: User[];
   onUpdate: () => void;
+  onDragStart?: (e: React.DragEvent, task: Task) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, task: Task) => void;
 }
 
-export default function TaskCard({ task, currentUser, users = [], onUpdate }: TaskCardProps) {
+export default function TaskCard({ 
+  task, 
+  currentUser, 
+  users = [], 
+  onUpdate,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop
+}: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description);
+  const [priority, setPriority] = useState(task.priority || 0);
   const [elapsedTime, setElapsedTime] = useState(task.timeSpent);
   const [isTransferring, setIsTransferring] = useState(false);
 
@@ -102,7 +116,11 @@ export default function TaskCard({ task, currentUser, users = [], onUpdate }: Ta
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim() && description.trim()) {
-      handleAction('update', { title: title.trim(), description: description.trim() });
+      handleAction('update', { 
+        title: title.trim(), 
+        description: description.trim(),
+        priority
+      });
     }
   };
 
@@ -150,6 +168,18 @@ export default function TaskCard({ task, currentUser, users = [], onUpdate }: Ta
             required
           />
         </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Priority</label>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(Number(e.target.value))}
+            className="input-field w-full px-3 py-2"
+          >
+            <option value="0">Low</option>
+            <option value="1">Medium</option>
+            <option value="2">High</option>
+          </select>
+        </div>
         <div className="flex justify-end space-x-2">
           <button
             type="button"
@@ -170,12 +200,30 @@ export default function TaskCard({ task, currentUser, users = [], onUpdate }: Ta
   }
 
   return (
-    <div className={`glass-card p-6 mb-4 ${
-      task.completed ? 'bg-opacity-50' : ''
-    }`}>
+    <div
+      className={`glass-card p-6 mb-4 ${task.completed ? 'opacity-60' : ''}`}
+      draggable={!task.completed}
+      onDragStart={(e) => onDragStart?.(e, task)}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop?.(e, task)}
+    >
       <div className="flex justify-between items-start">
         <div className="flex-grow">
-          <h3 className="text-lg font-medium">{task.title}</h3>
+          <div className="flex items-center gap-2">
+            {!task.completed && (
+              <div className={`w-2 h-2 rounded-full ${
+                task.priority >= 2 ? 'bg-red-500' :
+                task.priority === 1 ? 'bg-yellow-500' :
+                'bg-gray-500'
+              }`} title={`Priority: ${
+                task.priority >= 2 ? 'High' :
+                task.priority === 1 ? 'Medium' :
+                'Low'
+              }`} />
+            )}
+            <h3 className="text-base font-medium">{task.title}</h3>
+          </div>
           <p className="text-gray-500 mt-1 text-sm">{task.description}</p>
           <div className="text-xs text-gray-400 mt-2">
             Time spent: {formatTime(elapsedTime)}

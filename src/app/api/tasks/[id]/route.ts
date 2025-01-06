@@ -1,65 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTaskStatus, deleteTask, updateTask, undoTaskCompletion, startTask, pauseTask } from '@/lib/data';
+import { updateTask, updateTaskStatus, undoTaskCompletion, deleteTask, startTask, pauseTask, updateTaskPriority } from '@/lib/data';
 
-type Params = Promise<{ id: string }>
+type Params = Promise<{ id: string }>;
 
 export async function PATCH(
   request: NextRequest,
-  segmentData: { params: Params }
+  { params }: { params: Params }
 ) {
   try {
-    const params = await segmentData.params;
-    const taskId = params.id;
+    const { id } = await params;
     const { userId, action, updates } = await request.json();
-    
-    if (!userId || (userId !== 'user1' && userId !== 'user2')) {
-      return NextResponse.json(
-        { error: 'Invalid user ID' },
-        { status: 400 }
-      );
-    }
 
-    let result;
+    let result = null;
     switch (action) {
+      case 'update':
+        result = await updateTask(id, userId, updates);
+        break;
       case 'complete':
-        result = await updateTaskStatus(taskId, userId);
+        result = await updateTaskStatus(id, userId);
         break;
       case 'undo':
-        result = await undoTaskCompletion(taskId, userId);
-        break;
-      case 'update':
-        if (!updates) {
-          return NextResponse.json(
-            { error: 'No updates provided' },
-            { status: 400 }
-          );
-        }
-        result = await updateTask(taskId, userId, updates);
+        result = await undoTaskCompletion(id, userId);
         break;
       case 'start':
-        result = await startTask(taskId, userId);
+        result = await startTask(id, userId);
         break;
       case 'pause':
-        result = await pauseTask(taskId, userId);
+        result = await pauseTask(id, userId);
+        break;
+      case 'updatePriority':
+        result = await updateTaskPriority(id, updates.priority);
         break;
       default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-    
+
     if (!result) {
       return NextResponse.json(
-        { error: 'Task not found or not assigned to user' },
+        { error: 'Task not found or unauthorized' },
         { status: 404 }
       );
     }
 
     return NextResponse.json(result);
   } catch (error) {
+    console.error('Error updating task:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update task' },
       { status: 500 }
     );
   }
@@ -67,11 +54,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  segmentData: { params: Params }
+  { params }: { params: Params }
 ) {
   try {
-    const params = await segmentData.params;
-    const taskId = params.id;
+    const { id } = await params;
     const { userId } = await request.json();
     
     if (!userId || (userId !== 'user1' && userId !== 'user2')) {
@@ -81,7 +67,7 @@ export async function DELETE(
       );
     }
 
-    const success = await deleteTask(taskId, userId);
+    const success = await deleteTask(id, userId);
     
     if (!success) {
       return NextResponse.json(

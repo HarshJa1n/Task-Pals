@@ -10,6 +10,7 @@ export interface Task {
   completedAt?: Date | null;
   startTime: Date | null;
   timeSpent: number;
+  priority: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
