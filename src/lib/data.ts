@@ -1,16 +1,124 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { Task, TaskState, User } from '@/types';
+import { Task, User } from '@/types';
+import { prisma } from './prisma';
 
-const dataFilePath = path.join(process.cwd(), 'src/lib/data.json');
-
-export async function getData(): Promise<TaskState> {
-  const data = await fs.readFile(dataFilePath, 'utf8');
-  return JSON.parse(data);
+export async function getData(): Promise<{ tasks: Task[]; users: User[] }> {
+  const [tasks, users] = await Promise.all([
+    prisma.task.findMany(),
+    prisma.user.findMany(),
+  ]);
+  return { tasks, users };
 }
 
-export async function saveData(data: TaskState): Promise<void> {
-  await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
+export async function createTask(title: string, description: string, userId: 'user1' | 'user2'): Promise<Task> {
+  return prisma.task.create({
+    data: {
+      title,
+      description,
+      assignedTo: userId,
+    },
+  });
+}
+
+export async function updateTaskStatus(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId },
+  });
+
+  if (!task) return null;
+
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      completed: true,
+      completedBy: userId,
+      completedAt: new Date(),
+      startTime: null,
+    },
+  });
+}
+
+export async function undoTaskCompletion(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId },
+  });
+
+  if (!task) return null;
+
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      completed: false,
+      completedBy: null,
+      completedAt: null,
+      startTime: null,
+    },
+  });
+}
+
+export async function deleteTask(taskId: string, userId: 'user1' | 'user2'): Promise<boolean> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId },
+  });
+
+  if (!task) return false;
+
+  await prisma.task.delete({
+    where: { id: taskId },
+  });
+
+  return true;
+}
+
+export async function updateTask(
+  taskId: string,
+  userId: 'user1' | 'user2',
+  updates: { title?: string; description?: string }
+): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId },
+  });
+
+  if (!task) return null;
+
+  return prisma.task.update({
+    where: { id: taskId },
+    data: updates,
+  });
+}
+
+export async function startTask(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId, completed: false },
+  });
+
+  if (!task) return null;
+
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      startTime: new Date(),
+    },
+  });
+}
+
+export async function pauseTask(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: userId, completed: false },
+  });
+
+  if (!task || !task.startTime) return null;
+
+  const endTime = new Date();
+  const startTime = new Date(task.startTime);
+  const additionalTimeSpent = endTime.getTime() - startTime.getTime();
+
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      startTime: null,
+      timeSpent: task.timeSpent + additionalTimeSpent,
+    },
+  });
 }
 
 export async function importTasks(tasksJson: string): Promise<Task[]> {
@@ -37,189 +145,45 @@ export async function importTasks(tasksJson: string): Promise<Task[]> {
       throw new Error('One or more tasks have invalid structure');
     }
 
-    const data = await getData();
-    const processedTasks = newTasks.map(task => ({
-      ...task,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      completed: false,
-      startTime: null,
-      timeSpent: 0
-    }));
+    const processedTasks = await prisma.$transaction(
+      newTasks.map(task => 
+        prisma.task.create({
+          data: {
+            title: task.title,
+            description: task.description,
+            assignedTo: task.assignedTo,
+            completed: false,
+            timeSpent: 0,
+          },
+        })
+      )
+    );
 
-    data.tasks = [...data.tasks, ...processedTasks];
-    await saveData(data);
-    
     return processedTasks;
   } catch (error) {
     throw new Error('Failed to import tasks: ' + (error as Error).message);
   }
 }
 
-export async function transferTask(taskId: string, fromUserId: 'user1' | 'user2', toUserId: 'user1' | 'user2'): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== fromUserId) return null;
-  
-  task.assignedTo = toUserId;
-  task.startTime = null; // Reset timer when transferring
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
-}
-
 export async function updateUserName(userId: 'user1' | 'user2', name: string): Promise<User> {
-  const data = await getData();
-  const userIndex = data.users.findIndex(user => user.id === userId);
-  
-  if (userIndex === -1) throw new Error('User not found');
-  
-  data.users[userIndex].name = name;
-  await saveData(data);
-  
-  return data.users[userIndex];
+  return prisma.user.update({
+    where: { id: userId },
+    data: { name },
+  });
 }
 
-export async function createTask(title: string, description: string, userId: 'user1' | 'user2'): Promise<Task> {
-  const data = await getData();
-  const newTask: Task = {
-    id: Date.now().toString(),
-    title,
-    description,
-    assignedTo: userId,
-    completed: false,
-    startTime: null,
-    timeSpent: 0
-  };
-  
-  data.tasks.push(newTask);
-  await saveData(data);
-  
-  return newTask;
-}
+export async function transferTask(taskId: string, fromUserId: 'user1' | 'user2', toUserId: 'user1' | 'user2'): Promise<Task | null> {
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, assignedTo: fromUserId },
+  });
 
-export async function updateTaskStatus(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId) return null;
-  
-  task.completed = true;
-  task.completedBy = userId;
-  task.completedAt = new Date().toISOString();
-  
-  // Calculate time spent if task was started
-  if (task.startTime) {
-    const endTime = new Date();
-    const startTime = new Date(task.startTime);
-    task.timeSpent = (task.timeSpent || 0) + (endTime.getTime() - startTime.getTime());
-    task.startTime = null;
-  }
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
-}
+  if (!task) return null;
 
-export async function undoTaskCompletion(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId) return null;
-  
-  task.completed = false;
-  task.completedBy = undefined;
-  task.completedAt = undefined;
-  task.startTime = null;
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
-}
-
-export async function deleteTask(taskId: string, userId: 'user1' | 'user2'): Promise<boolean> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return false;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId) return false;
-  
-  data.tasks.splice(taskIndex, 1);
-  await saveData(data);
-  
-  return true;
-}
-
-export async function updateTask(
-  taskId: string,
-  userId: 'user1' | 'user2',
-  updates: { title?: string; description?: string }
-): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId) return null;
-  
-  if (updates.title) task.title = updates.title;
-  if (updates.description) task.description = updates.description;
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
-}
-
-export async function startTask(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId || task.completed) return null;
-  
-  task.startTime = new Date().toISOString();
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
-}
-
-export async function pauseTask(taskId: string, userId: 'user1' | 'user2'): Promise<Task | null> {
-  const data = await getData();
-  const taskIndex = data.tasks.findIndex(task => task.id === taskId);
-  
-  if (taskIndex === -1) return null;
-  
-  const task = data.tasks[taskIndex];
-  if (task.assignedTo !== userId || task.completed || !task.startTime) return null;
-  
-  const endTime = new Date();
-  const startTime = new Date(task.startTime);
-  task.timeSpent = (task.timeSpent || 0) + (endTime.getTime() - startTime.getTime());
-  task.startTime = null;
-  
-  data.tasks[taskIndex] = task;
-  await saveData(data);
-  
-  return task;
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      assignedTo: toUserId,
+      startTime: null, // Reset timer when transferring
+    },
+  });
 } 

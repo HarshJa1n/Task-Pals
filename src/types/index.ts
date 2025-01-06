@@ -1,17 +1,21 @@
+export type UserType = 'user1' | 'user2';
+
 export interface Task {
   id: string;
   title: string;
   description: string;
-  assignedTo: 'user1' | 'user2';
+  assignedTo: UserType;
   completed: boolean;
-  completedBy?: 'user1' | 'user2';
-  completedAt?: string;
-  startTime: string | null;
+  completedBy?: UserType | null;
+  completedAt?: Date | null;
+  startTime: Date | null;
   timeSpent: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface User {
-  id: 'user1' | 'user2';
+  id: UserType;
   name: string;
 }
 
